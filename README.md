@@ -186,10 +186,11 @@ weather: {
 - ✅ **自动IP定位**：
   - 主方法：myip.ipip.net
   - 备用方法：ipconfig.me
-- ✅ **IP地理位置解析**：ip-api.com（获取经纬度）
+- ✅ **IP地理位置解析**：ipinfo.io（获取经纬度）
 - ✅ **中文城市名称**：和风天气 GeoAPI（经纬度→中文地名）
 - ✅ **和风天气API**：实时天气数据
   - 温度、天气描述、天气图标
+  - 7天天气预报（显示未来3天）
   - 30分钟自动更新
 - ✅ **位置标记**：红色闪烁标记显示当前位置
 
@@ -321,7 +322,7 @@ vec4 finalColor = mix(nightColor, dayColor, dayMix);
 ```
 1. 获取IP (myip.ipip.net 或 ipconfig.me)
    ↓
-2. IP → 地理坐标 (ip-api.com，英文)
+2. IP → 地理坐标 (ipinfo.io)
    ↓
 3. 坐标 → 中文城市名称 (和风天气 GeoAPI)
    ↓
@@ -330,6 +331,7 @@ vec4 finalColor = mix(nightColor, dayColor, dayMix);
 
 **优势**：
 - 获取准确的中文城市名称
+- ipinfo.io 响应快速，数据准确
 - 统一使用和风天气API生态
 - 自动降级：GeoAPI失败时使用英文名称
 
@@ -358,7 +360,7 @@ vec4 finalColor = mix(nightColor, dayColor, dayMix);
 
 ### 1. API配置
 - **和风天气API**：需要注册获取免费API Key
-- **IP定位服务**：使用 ip-api.com，无需注册，完全免费
+- **IP定位服务**：使用 ipinfo.io，无需注册（有免费额度限制）
 
 ### 2. 坐标系统
 - 经度偏移量可能需要根据实际情况调整
@@ -382,7 +384,7 @@ vec4 finalColor = mix(nightColor, dayColor, dayMix);
 | 地球纹理 | 公共领域 | NASA/Solar System Scope |
 | JetBrains Mono | OFL | https://jetbrains.com/mono |
 | QWeather API | 商业/免费 | https://www.qweather.com/ |
-| ip-api.com | 免费（非商业） | https://ip-api.com/ |
+| ipinfo.io | 免费额度 | https://ipinfo.io/ |
 
 ---
 
@@ -420,11 +422,18 @@ vec4 finalColor = mix(nightColor, dayColor, dayMix);
 - **Vite** - 下一代前端工具链
 - **NASA** - 地球纹理资源
 - **和风天气** - 天气数据服务
-- **ip-api.com** - 免费IP定位服务
+- **ipinfo.io** - IP定位服务
 
 ---
 
 ## 🔄 版本历史
+
+### v1.3.0 (2025-01)
+- ✅ 相机控制系统：支持拖拽旋转、滚轮缩放、自动旋转
+- ✅ Wallpaper Engine 实时配置：所有相机参数可动态调整
+- ✅ 未来天气预报：7天数据，显示未来3天
+- ✅ 切换IP定位服务：从 ip-api.com 到 ipinfo.io
+- ✅ 移除无用配置项：删除 rotationSpeed
 
 ### v1.2.0 (2025-01)
 - ✅ 添加自动太阳赤纬角计算（基于日期的真实季节模拟）
@@ -453,5 +462,5 @@ vec4 finalColor = mix(nightColor, dayColor, dayMix);
 ---
 
 > **最后更新**：2025年1月
-> **当前版本**：v1.2.0
+> **当前版本**：v1.3.0
 > **构建状态**：✅ 成功

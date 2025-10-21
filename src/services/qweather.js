@@ -50,7 +50,7 @@ class QWeatherService {
   /**
    * 获取当前位置（三步流程）
    * 步骤1: 获取IP (myip.ipip.net 或 ipconfig.me)
-   * 步骤2: IP→坐标 (ip-api.com)
+   * 步骤2: IP→坐标 (ipinfo.io)
    * 步骤3: 通过和风天气GeoAPI获取中文城市名称
    */
   async getLocation() {
