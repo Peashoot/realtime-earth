@@ -72,6 +72,29 @@
         "text": "显示农历",
         "type": "bool",
         "value": false
+      },
+      "enableCelestialSystem": {
+        "order": 9,
+        "text": "启用天体系统（月球、行星等）",
+        "type": "bool",
+        "value": true
+      },
+      "showOrbits": {
+        "order": 10,
+        "text": "显示天体轨道线",
+        "type": "bool",
+        "value": false,
+        "condition": "enableCelestialSystem == true"
+      },
+      "celestialTimeScale": {
+        "order": 11,
+        "text": "天体运动速度",
+        "type": "slider",
+        "value": 1000,
+        "min": 1,
+        "max": 10000,
+        "step": 100,
+        "condition": "enableCelestialSystem == true"
       }
     }
   },

@@ -44,7 +44,34 @@ export const CONFIG = {
       enableZoom: false,         // 是否允许滚轮缩放
       distance: 3.0,            // 相机距离（1.5 - 5.0）
       autoRotate: true,        // 是否自动旋转观察视角
-      autoRotateSpeed: 1.0      // 自动旋转速度（-10.0 到 10.0，负值为反向）
+      autoRotateSpeed: 0.1      // 自动旋转速度（-10.0 到 10.0，负值为反向）
+    },
+
+    // 天体系统配置
+    celestial: {
+      enabled: true,            // 是否启用天体系统
+      showOrbits: false,        // 是否显示轨道线
+      timeScale: 1000,          // 时间缩放倍数（1=真实时间，1000=加速1000倍）
+
+      // 太阳视觉效果
+      sun: {
+        enablePulsate: true,    // 是否启用太阳脉动效果
+        enableCorona: true      // 是否启用日冕效果
+      },
+
+      // 各个天体的显示开关
+      bodies: {
+        moon: true,             // 月球
+        sun: true,              // 太阳
+        mercury: true,          // 水星
+        venus: true,            // 金星
+        mars: true,             // 火星
+        jupiter: true,          // 木星
+        saturn: true,           // 土星
+        uranus: true,           // 天王星
+        neptune: true,          // 海王星
+        comet: false             // 彗星
+      }
     }
   }
 }

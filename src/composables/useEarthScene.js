@@ -2,6 +2,7 @@
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import { CSS2DRenderer, CSS2DObject } from 'three/examples/jsm/renderers/CSS2DRenderer.js'
 import { useSunPosition } from './useSunPosition.js'
+import { useCelestialSystem } from './useCelestialSystem.js'
 import { CONFIG } from '../utils/config.js'
 import { latLonToVector3 } from '../utils/geoUtils.js'
 
@@ -323,6 +324,14 @@ export function useEarthScene(canvas) {
   // 获取太阳位置计算函数
   const { updateSunLight } = useSunPosition(sunLight)
 
+  // 初始化天体系统（月球、行星、彗星等）
+  let celestialSystem = null
+  if (CONFIG.earth.celestial?.enabled !== false) {
+    celestialSystem = useCelestialSystem(scene, earthGroup, sunLight)
+    const showOrbits = CONFIG.earth.celestial?.showOrbits || false
+    celestialSystem.init(showOrbits)
+  }
+
   const clock = new THREE.Clock()
   let markerBlinkTime = 0 // 标记闪烁时间
 
@@ -334,6 +343,11 @@ export function useEarthScene(canvas) {
 
     // 更新轨道控制器
     controls.update()
+
+    // 更新天体系统（月球、行星、彗星）
+    if (celestialSystem) {
+      celestialSystem.update(delta)
+    }
 
     // 标记闪烁效果
     if (locationMarker) {
@@ -397,11 +411,27 @@ export function useEarthScene(canvas) {
     console.log('自动旋转速度已更新到:', event.detail.speed)
   }
 
+  const handleShowOrbitsChange = (event) => {
+    if (celestialSystem) {
+      celestialSystem.toggleOrbits(event.detail.enabled)
+      console.log('轨道线已', event.detail.enabled ? '显示' : '隐藏')
+    }
+  }
+
+  const handleCelestialTimeScaleChange = (event) => {
+    if (celestialSystem) {
+      celestialSystem.setTimeScale(event.detail.timeScale)
+      console.log('天体运动速度已更新到:', event.detail.timeScale)
+    }
+  }
+
   window.addEventListener('cameraDistanceChanged', handleCameraDistanceChange)
   window.addEventListener('enableRotateChanged', handleEnableRotateChange)
   window.addEventListener('enableZoomChanged', handleEnableZoomChange)
   window.addEventListener('autoRotateChanged', handleAutoRotateChange)
   window.addEventListener('autoRotateSpeedChanged', handleAutoRotateSpeedChange)
+  window.addEventListener('showOrbitsChanged', handleShowOrbitsChange)
+  window.addEventListener('celestialTimeScaleChanged', handleCelestialTimeScaleChange)
 
   // 清理函数
   return {
@@ -412,6 +442,8 @@ export function useEarthScene(canvas) {
       window.removeEventListener('enableZoomChanged', handleEnableZoomChange)
       window.removeEventListener('autoRotateChanged', handleAutoRotateChange)
       window.removeEventListener('autoRotateSpeedChanged', handleAutoRotateSpeedChange)
+      window.removeEventListener('showOrbitsChanged', handleShowOrbitsChange)
+      window.removeEventListener('celestialTimeScaleChanged', handleCelestialTimeScaleChange)
       controls.dispose()
       renderer.dispose()
       // 清理经线
@@ -432,6 +464,10 @@ export function useEarthScene(canvas) {
       if (locationMarker) {
         locationMarker.geometry.dispose()
         locationMarker.material.dispose()
+      }
+      // 清理天体系统
+      if (celestialSystem) {
+        celestialSystem.cleanup()
       }
     },
     addLocationMarker // 导出添加位置标记的函数

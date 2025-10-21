@@ -95,6 +95,32 @@ export function initWallpaperEngineListener() {
           detail: { enabled: properties.showLunar.value }
         }))
       }
+
+      // 启用天体系统
+      if (properties.enableCelestialSystem !== undefined) {
+        CONFIG.earth.celestial.enabled = properties.enableCelestialSystem.value
+        console.log('启用天体系统:', CONFIG.earth.celestial.enabled)
+        // 天体系统开关需要重新加载页面才能生效
+        window.location.reload()
+      }
+
+      // 显示天体轨道线
+      if (properties.showOrbits !== undefined) {
+        CONFIG.earth.celestial.showOrbits = properties.showOrbits.value
+        console.log('显示天体轨道线:', CONFIG.earth.celestial.showOrbits)
+        window.dispatchEvent(new CustomEvent('showOrbitsChanged', {
+          detail: { enabled: properties.showOrbits.value }
+        }))
+      }
+
+      // 天体运动速度
+      if (properties.celestialTimeScale !== undefined) {
+        CONFIG.earth.celestial.timeScale = properties.celestialTimeScale.value
+        console.log('天体运动速度:', CONFIG.earth.celestial.timeScale)
+        window.dispatchEvent(new CustomEvent('celestialTimeScaleChanged', {
+          detail: { timeScale: properties.celestialTimeScale.value }
+        }))
+      }
     }
   }
 
