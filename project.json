@@ -1,0 +1,83 @@
+{
+  "file": "dist/index.html",
+  "general": {
+    "properties": {
+      "schemecolor": {
+        "order": 0,
+        "text": "主题颜色",
+        "type": "color",
+        "value": "0.0 0.4 1.0"
+      },
+      "textureQuality": {
+        "order": 1,
+        "text": "纹理质量",
+        "type": "combo",
+        "value": "2k",
+        "options": [
+          {
+            "label": "低 (2K)",
+            "value": "2k"
+          },
+          {
+            "label": "高 (8K)",
+            "value": "8k"
+          }
+        ]
+      },
+      "cameraDistance": {
+        "order": 2,
+        "text": "相机距离（缩放）",
+        "type": "slider",
+        "value": 3.0,
+        "min": 1.5,
+        "max": 5.0,
+        "step": 0.1
+      },
+      "enableRotate": {
+        "order": 3,
+        "text": "允许鼠标拖动旋转",
+        "type": "bool",
+        "value": true
+      },
+      "enableZoom": {
+        "order": 4,
+        "text": "允许滚轮缩放",
+        "type": "bool",
+        "value": true
+      },
+      "autoRotate": {
+        "order": 5,
+        "text": "自动旋转观察视角",
+        "type": "bool",
+        "value": false
+      },
+      "autoRotateSpeed": {
+        "order": 6,
+        "text": "自动旋转速度",
+        "type": "slider",
+        "value": 1.0,
+        "min": -10.0,
+        "max": 10.0,
+        "step": 0.5,
+        "condition": "autoRotate == true"
+      },
+      "showMeridianLines": {
+        "order": 7,
+        "text": "显示经纬线",
+        "type": "bool",
+        "value": false
+      },
+      "showLunar": {
+        "order": 8,
+        "text": "显示农历",
+        "type": "bool",
+        "value": false
+      }
+    }
+  },
+  "title": "实时地球动态壁纸",
+  "type": "web",
+  "version": 1,
+  "description": "根据真实时间模拟太阳光照的3D地球仪壁纸",
+  "tags": ["地球", "3D", "实时", "天气"]
+}
