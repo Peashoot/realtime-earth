@@ -72,6 +72,22 @@ export const CONFIG = {
         neptune: true,          // 海王星
         comet: false             // 彗星
       }
+    },
+
+    // 性能优化配置
+    performance: {
+      // 阴影配置
+      enableShadows: false,           // 是否启用阴影（性能敏感，建议中高端设备开启）
+      shadowMapSize: 1024,            // 阴影贴图尺寸（512/1024/2048，越大越清晰但越耗性能）
+
+      // 后期处理配置
+      enablePostProcessing: false,     // 是否启用后期处理（Bloom等效果）
+      bloomStrength: 0.5,             // Bloom 强度（0.0-2.0）
+      bloomRadius: 0.4,               // Bloom 半径（0.0-1.0）
+      bloomThreshold: 0.85,           // Bloom 阈值（0.0-1.0，越高越少发光）
+
+      // 性能监控
+      enableMonitoring: false,         // 是否启用 FPS 监控（开发模式推荐）
     }
   }
 }

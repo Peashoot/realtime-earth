@@ -27,8 +27,20 @@ function calculateSolarDeclination(date = new Date()) {
 
 export function useSunPosition(sunLight) {
   const sunDistance = 5 // 太阳与地球的距离
+  let lastUpdateTime = 0 // 上次更新的时间戳
+  let lastLogTime = 0 // 上次日志输出时间
+  const updateInterval = 1000 // 每秒更新一次太阳位置（毫秒）
+  const logInterval = 5000 // 每5秒输出一次日志（毫秒）
 
-  const updateSunLight = () => {
+  // 缓存上次计算的太阳位置，避免重复计算
+  let cachedSunPosition = { x: 0, y: 0, z: 0 }
+
+  const updateSunLight = (currentTime = Date.now(), verbose = false) => {
+    // 性能优化：只在需要时更新（每秒一次）
+    if (!verbose && currentTime - lastUpdateTime < updateInterval) {
+      return
+    }
+
     const now = new Date()
     const utcHours = now.getUTCHours()
     const utcMinutes = now.getUTCMinutes()
@@ -55,31 +67,39 @@ export function useSunPosition(sunLight) {
     }
     const decRad = declination * (Math.PI / 180)
 
+    // 预计算三角函数值
+    const cosLon = Math.cos(lonRad)
+    const sinLon = Math.sin(lonRad)
+    const cosDec = Math.cos(decRad)
+    const sinDec = Math.sin(decRad)
+
     // 将经度和赤纬角转换为Three.js世界坐标
-    const x = -Math.sin(lonRad) * Math.cos(decRad) * sunDistance
-    const y = Math.sin(decRad) * sunDistance // Y坐标由赤纬角决定
-    const z = Math.cos(lonRad) * Math.cos(decRad) * sunDistance
+    cachedSunPosition.x = -sinLon * cosDec * sunDistance
+    cachedSunPosition.y = sinDec * sunDistance // Y坐标由赤纬角决定
+    cachedSunPosition.z = cosLon * cosDec * sunDistance
 
-    sunLight.position.set(x, y, z)
+    sunLight.position.set(cachedSunPosition.x, cachedSunPosition.y, cachedSunPosition.z)
 
-    // 调试输出（显示北京时间和照射经度）
-    const localHours = (utcHours + 8) % 24
-    const declinationMode = CONFIG.earth.sunDeclination === 'auto' ? '(自动)' : '(手动)'
-    console.log(`UTC ${String(utcHours).padStart(2, '0')}:${String(utcMinutes).padStart(2, '0')} (北京${String(localHours).padStart(2, '0')}:${String(utcMinutes).padStart(2, '0')}) - 太阳照射: 东经${longitude.toFixed(1)}°, 赤纬${declination.toFixed(1)}°${declinationMode} - 位置: (${x.toFixed(2)}, ${y.toFixed(2)}, ${z.toFixed(2)})`)
+    lastUpdateTime = currentTime
+
+    // 调试输出（限制频率，避免控制台刷屏）
+    if (verbose || currentTime - lastLogTime >= logInterval) {
+      const localHours = (utcHours + 8) % 24
+      const declinationMode = CONFIG.earth.sunDeclination === 'auto' ? '(自动)' : '(手动)'
+      console.log(`UTC ${String(utcHours).padStart(2, '0')}:${String(utcMinutes).padStart(2, '0')} (北京${String(localHours).padStart(2, '0')}:${String(utcMinutes).padStart(2, '0')}) - 太阳照射: 东经${longitude.toFixed(1)}°, 赤纬${declination.toFixed(1)}°${declinationMode} - 位置: (${cachedSunPosition.x.toFixed(2)}, ${cachedSunPosition.y.toFixed(2)}, ${cachedSunPosition.z.toFixed(2)})`)
+      lastLogTime = currentTime
+    }
   }
 
   // 设置光照强度和颜色
   sunLight.intensity = 1.0
   sunLight.color.setHex(0xFFF5E6)
 
-  // 初始化太阳位置
-  updateSunLight()
-
-  // 每10秒更新一次太阳位置（24小时360度，60秒约0.24度，视觉上足够平滑）
-  const interval = setInterval(updateSunLight, 60000)
+  // 初始化太阳位置（首次调用，显示日志）
+  updateSunLight(Date.now(), true)
 
   return {
     updateSunLight,
-    cleanup: () => clearInterval(interval)
+    cleanup: () => {} // 不再需要清理 interval
   }
 }

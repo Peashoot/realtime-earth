@@ -15,6 +15,11 @@ export function useCelestialSystem(scene, earthGroup, sunLight) {
   let timeScale = TIME_SCALE.default
   let elapsedTime = 0
 
+  // 缓存向量对象以避免每帧创建临时对象（性能优化）
+  const _tempVector1 = new THREE.Vector3()
+  const _tempVector2 = new THREE.Vector3()
+  const _tempVector3 = new THREE.Vector3()
+
   /**
    * 创建月球
    */
@@ -22,8 +27,8 @@ export function useCelestialSystem(scene, earthGroup, sunLight) {
     const config = CELESTIAL_BODIES.moon
     if (!config.enabled) return
 
-    // 月球几何体
-    const geometry = new THREE.SphereGeometry(config.radius, 64, 64) // 提高细分度
+    // 月球几何体 - 降低细分度以提升性能
+    const geometry = new THREE.SphereGeometry(config.radius, 32, 32)
     const material = new THREE.MeshPhongMaterial({
       color: config.color,
       emissive: config.emissive || 0x000000,
@@ -59,8 +64,8 @@ export function useCelestialSystem(scene, earthGroup, sunLight) {
 
     const sunGroup = new THREE.Group()
 
-    // 1. 太阳核心球体（主体）
-    const coreGeometry = new THREE.SphereGeometry(config.radius, 64, 64)
+    // 1. 太阳核心球体（主体） - 降低细分度
+    const coreGeometry = new THREE.SphereGeometry(config.radius, 32, 32)
     const coreMaterial = new THREE.MeshBasicMaterial({
       color: config.color,
       emissive: config.color,
@@ -69,8 +74,8 @@ export function useCelestialSystem(scene, earthGroup, sunLight) {
     const sunCore = new THREE.Mesh(coreGeometry, coreMaterial)
     sunGroup.add(sunCore)
 
-    // 2. 内层光晕（强光）
-    const innerGlowGeometry = new THREE.SphereGeometry(config.radius * 1.2, 64, 64)
+    // 2. 内层光晕（强光） - 降低细分度
+    const innerGlowGeometry = new THREE.SphereGeometry(config.radius * 1.2, 24, 24)
     const innerGlowMaterial = new THREE.MeshBasicMaterial({
       color: 0xffff00,
       transparent: true,
@@ -81,8 +86,8 @@ export function useCelestialSystem(scene, earthGroup, sunLight) {
     const innerGlow = new THREE.Mesh(innerGlowGeometry, innerGlowMaterial)
     sunGroup.add(innerGlow)
 
-    // 3. 中层光晕（日冕效果）
-    const midGlowGeometry = new THREE.SphereGeometry(config.radius * 1.5, 64, 64)
+    // 3. 中层光晕（日冕效果） - 降低细分度
+    const midGlowGeometry = new THREE.SphereGeometry(config.radius * 1.5, 24, 24)
     const midGlowMaterial = new THREE.MeshBasicMaterial({
       color: 0xffdd88,
       transparent: true,
@@ -93,8 +98,8 @@ export function useCelestialSystem(scene, earthGroup, sunLight) {
     const midGlow = new THREE.Mesh(midGlowGeometry, midGlowMaterial)
     sunGroup.add(midGlow)
 
-    // 4. 外层光晕（柔和扩散）
-    const outerGlowGeometry = new THREE.SphereGeometry(config.radius * 2.0, 64, 64)
+    // 4. 外层光晕（柔和扩散） - 降低细分度
+    const outerGlowGeometry = new THREE.SphereGeometry(config.radius * 2.0, 24, 24)
     const outerGlowMaterial = new THREE.MeshBasicMaterial({
       color: 0xffaa44,
       transparent: true,
@@ -105,8 +110,8 @@ export function useCelestialSystem(scene, earthGroup, sunLight) {
     const outerGlow = new THREE.Mesh(outerGlowGeometry, outerGlowMaterial)
     sunGroup.add(outerGlow)
 
-    // 5. 径向光晕（使用自定义着色器）
-    const coronaGeometry = new THREE.SphereGeometry(config.radius * 2.5, 64, 64)
+    // 5. 径向光晕（使用自定义着色器） - 降低细分度
+    const coronaGeometry = new THREE.SphereGeometry(config.radius * 2.5, 24, 24)
     const coronaMaterial = new THREE.ShaderMaterial({
       uniforms: {
         glowColor: { value: new THREE.Color(0xffbb55) },
@@ -157,8 +162,8 @@ export function useCelestialSystem(scene, earthGroup, sunLight) {
     const config = CELESTIAL_BODIES[key]
     if (!config.enabled || config.type !== 'planet') return
 
-    // 行星几何体
-    const geometry = new THREE.SphereGeometry(config.radius, 64, 64) // 提高细分度
+    // 行星几何体 - 降低细分度以提升性能
+    const geometry = new THREE.SphereGeometry(config.radius, 32, 32)
     const material = new THREE.MeshPhongMaterial({
       color: config.color,
       emissive: config.emissive || 0x000000,
@@ -172,7 +177,7 @@ export function useCelestialSystem(scene, earthGroup, sunLight) {
       const ringGeometry = new THREE.RingGeometry(
         config.ringInnerRadius,
         config.ringOuterRadius,
-        128 // 提高细分度
+        64 // 降低细分度
       )
       const ringMaterial = new THREE.MeshBasicMaterial({
         color: config.ringColor || 0xccaa88,
@@ -378,7 +383,7 @@ export function useCelestialSystem(scene, earthGroup, sunLight) {
   }
 
   /**
-   * 更新天体位置
+   * 更新天体位置（性能优化版）
    */
   function update(deltaTime) {
     // 累计时间（加速）
@@ -396,17 +401,15 @@ export function useCelestialSystem(scene, earthGroup, sunLight) {
     // 更新太阳位置（在光源方向上，但距离固定为可视距离）
     if (bodies.sun && sunLight) {
       const sunVisualDistance = bodies.sun.config.visualDistance || 12
-      const direction = new THREE.Vector3()
-        .copy(sunLight.position)
-        .normalize() // 获取光源方向
-      bodies.sun.mesh.position.copy(direction.multiplyScalar(sunVisualDistance))
+      // 重用 _tempVector1 避免创建新对象
+      _tempVector1.copy(sunLight.position).normalize().multiplyScalar(sunVisualDistance)
+      bodies.sun.mesh.position.copy(_tempVector1)
 
       // 更新日冕着色器的视图向量（边缘光效果）
       if (bodies.sun.corona && CONFIG.earth.celestial?.sun?.enableCorona !== false) {
-        const viewVector = new THREE.Vector3()
-          .subVectors(scene.children[0].position, bodies.sun.mesh.position) // 相机到太阳的方向
-          .normalize()
-        bodies.sun.corona.material.uniforms.viewVector.value = viewVector
+        // 重用 _tempVector2
+        _tempVector2.subVectors(scene.children[0].position, bodies.sun.mesh.position).normalize()
+        bodies.sun.corona.material.uniforms.viewVector.value.copy(_tempVector2)
       }
 
       // 可选：添加太阳核心的微妙脉动效果
@@ -416,14 +419,17 @@ export function useCelestialSystem(scene, earthGroup, sunLight) {
       }
     }
 
-    // 更新行星
+    // 更新行星（批量处理，减少函数调用开销）
     Object.keys(bodies).forEach(key => {
       const body = bodies[key]
       if (body.config.type === 'planet') {
         const period = body.config.orbitPeriod * 24 * 3600
         body.angle += (deltaTime * timeScale / period) * Math.PI * 2
-        body.mesh.position.x = Math.cos(body.angle) * body.config.orbitRadius
-        body.mesh.position.z = Math.sin(body.angle) * body.config.orbitRadius
+        // 直接计算，避免三角函数缓存不命中
+        const cosAngle = Math.cos(body.angle)
+        const sinAngle = Math.sin(body.angle)
+        body.mesh.position.x = cosAngle * body.config.orbitRadius
+        body.mesh.position.z = sinAngle * body.config.orbitRadius
       }
     })
 
@@ -441,10 +447,9 @@ export function useCelestialSystem(scene, earthGroup, sunLight) {
       comet.mesh.position.x = a * Math.cos(comet.angle)
       comet.mesh.position.z = b * Math.sin(comet.angle)
 
-      // 计算彗星到太阳的距离
-      const distanceToSun = new THREE.Vector3()
-        .subVectors(comet.mesh.position, sunLight.position)
-        .length()
+      // 计算彗星到太阳的距离 - 重用 _tempVector1
+      _tempVector1.subVectors(comet.mesh.position, sunLight.position)
+      const distanceToSun = _tempVector1.length()
 
       // 根据距离调整彗尾亮度和彗发大小（越近越亮越大）
       const maxDistance = 15 // 最远距离
@@ -466,30 +471,27 @@ export function useCelestialSystem(scene, earthGroup, sunLight) {
         comet.dustTail.material.opacity = 0.3 + intensity * 0.4
       }
 
-      // 彗尾始终背向太阳
-      const direction = new THREE.Vector3()
-        .subVectors(comet.mesh.position, sunLight.position)
-        .normalize()
+      // 彗尾始终背向太阳 - 重用 _tempVector1（已包含方向信息）
+      _tempVector1.normalize()
 
       // 离子尾（笔直指向远离太阳）
       if (comet.ionTail) {
-        comet.ionTail.quaternion.setFromUnitVectors(
-          new THREE.Vector3(-1, 0, 0),
-          direction
-        )
+        // 重用 _tempVector2 作为基准向量
+        _tempVector2.set(-1, 0, 0)
+        comet.ionTail.quaternion.setFromUnitVectors(_tempVector2, _tempVector1)
       }
 
       // 尘埃尾（稍微偏离，模拟轨道弯曲效果）
       if (comet.dustTail) {
-        const dustDirection = direction.clone()
-        // 添加轨道切线方向的偏移
-        const tangent = new THREE.Vector3(-Math.sin(comet.angle), 0, Math.cos(comet.angle))
-        dustDirection.add(tangent.multiplyScalar(0.3)).normalize()
+        // 重用 _tempVector3 作为尘埃方向
+        _tempVector3.copy(_tempVector1)
+        // 添加轨道切线方向的偏移 - 重用 _tempVector2
+        _tempVector2.set(-Math.sin(comet.angle), 0, Math.cos(comet.angle))
+        _tempVector3.add(_tempVector2.multiplyScalar(0.3)).normalize()
 
-        comet.dustTail.quaternion.setFromUnitVectors(
-          new THREE.Vector3(-1, 0, 0),
-          dustDirection
-        )
+        // 重用 _tempVector2 作为基准向量
+        _tempVector2.set(-1, 0, 0)
+        comet.dustTail.quaternion.setFromUnitVectors(_tempVector2, _tempVector3)
       }
     }
   }
