@@ -166,8 +166,15 @@ export function useEarthScene(canvas) {
         float twilightBoost = smoothstep(0.3, 0.7, nightIntensity) * smoothstep(0.3, 0.7, dayMix);
         nightIntensity = nightIntensity + twilightBoost * 0.3;
 
-        // 混合昼夜纹理
-        vec4 finalColor = mix(nightColor * nightIntensity, dayColor, dayMix);
+        // 夜间渲染优化：使用白天贴图作为基础，叠加城市灯光
+        // 1. 夜间基础色：白天贴图降低亮度（可以看到陆地轮廓）
+        vec3 nightBase = dayColor.rgb * 0.1;
+
+        // 2. 叠加城市灯光（nightTexture）
+        vec3 nightWithLights = nightBase + nightColor.rgb * nightIntensity * 1.5;
+
+        // 3. 混合昼夜纹理
+        vec4 finalColor = vec4(mix(nightWithLights, dayColor.rgb, dayMix), 1.0);
 
         // 添加高光效果（使用扰动法线，仅白天，海洋反射）
         vec3 viewDir = normalize(cameraPosition - vPosition);
@@ -283,17 +290,6 @@ export function useEarthScene(canvas) {
   }
 
   scene.add(sunLight)
-
-  // 添加可视化的太阳球体（用于 Bloom 效果）
-  const sunGeometry = new THREE.SphereGeometry(0.3, 32, 32)
-  const sunMaterial = new THREE.MeshBasicMaterial({
-    color: 0xFFF5E6,
-    emissive: 0xFFFFFF,
-    emissiveIntensity: 2.0
-  })
-  const sunMesh = new THREE.Mesh(sunGeometry, sunMaterial)
-  sunMesh.position.copy(sunLight.position)
-  scene.add(sunMesh)
 
   // 环境光（模拟散射光）
   const ambientLight = new THREE.AmbientLight(0x404040, 0.3)
@@ -501,9 +497,6 @@ export function useEarthScene(canvas) {
     // 更新太阳位置（每秒一次，已在函数内部节流）
     updateSunLight(currentTime, false)
 
-    // 同步太阳球体位置
-    sunMesh.position.copy(sunLight.position)
-
     // 更新轨道控制器
     controls.update()
 
@@ -639,8 +632,6 @@ export function useEarthScene(canvas) {
       atmosphereMaterial.dispose()
       starsGeometry.dispose()
       starsMaterial.dispose()
-      sunGeometry.dispose()
-      sunMaterial.dispose()
       if (locationMarker) {
         locationMarker.geometry.dispose()
         locationMarker.material.dispose()

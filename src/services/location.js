@@ -50,37 +50,34 @@ export async function getClientIP() {
 }
 
 /**
- * 步骤2: 通过IP地址获取地理位置（ipinfo.io）
+ * 步骤2: 通过IP地址获取地理位置（ip-api）
  * @param {string} ip - IP地址
  */
 export async function getLocationByIP(ip) {
   try {
-    const url = `https://ipinfo.io/${ip}/json`
-    console.log('请求 ipinfo.io:', url)
+    const url = `https://ip-api.peashootzzz.workers.dev/?ip=${ip}`
+    console.log('请求 ip-api:', url)
 
     const response = await fetch(url)
     const data = await response.json()
 
-    if (data.loc) {
+    if (data.status === 'success') {
       console.log('IP定位成功:', data)
 
-      // ipinfo.io 的 loc 格式是 "纬度,经度"
-      const [lat, lon] = data.loc.split(',').map(Number)
-
       return {
-        lat: lat,
-        lon: lon,
+        lat: data.lat,
+        lon: data.lon,
         country: data.country,
-        province: data.region || '',
+        province: data.regionName || '',
         city: data.city || '',
         district: '',
-        address: `${data.region || ''} ${data.city || ''}`.trim(),
+        address: `${data.regionName || ''} ${data.city || ''}`.trim(),
         timezone: data.timezone,
-        org: data.org
+        org: data.isp
       }
     }
 
-    throw new Error(`ipinfo.io 返回数据中缺少位置信息`)
+    throw new Error(`ip-api 返回失败: ${data.message || '未知错误'}`)
   } catch (error) {
     console.error('通过IP获取位置失败:', error)
     throw error

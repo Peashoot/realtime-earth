@@ -26,7 +26,7 @@ function calculateSolarDeclination(date = new Date()) {
 }
 
 export function useSunPosition(sunLight) {
-  const sunDistance = 5 // 太阳与地球的距离
+  const sunDistance = 50 // 太阳与地球的距离（与可视太阳距离一致）
   let lastUpdateTime = 0 // 上次更新的时间戳
   let lastLogTime = 0 // 上次日志输出时间
   const updateInterval = 1000 // 每秒更新一次太阳位置（毫秒）

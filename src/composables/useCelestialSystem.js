@@ -21,19 +21,113 @@ export function useCelestialSystem(scene, earthGroup, sunLight) {
   const _tempVector3 = new THREE.Vector3()
 
   /**
-   * 创建月球
+   * 生成月球纹理（程序化Canvas贴图）
+   */
+  function createMoonTexture(size = 512) {
+    const canvas = document.createElement('canvas')
+    canvas.width = size
+    canvas.height = size
+    const ctx = canvas.getContext('2d')
+
+    // 1. 基础月球表面（灰色渐变）
+    const baseGradient = ctx.createRadialGradient(
+      size * 0.4, size * 0.4, 0,
+      size * 0.5, size * 0.5, size * 0.6
+    )
+    baseGradient.addColorStop(0, '#e0e0e0')    // 中心亮区
+    baseGradient.addColorStop(0.5, '#c9c9c9')  // 中间灰色
+    baseGradient.addColorStop(1, '#999999')    // 边缘暗区
+
+    ctx.fillStyle = baseGradient
+    ctx.fillRect(0, 0, size, size)
+
+    // 2. 添加月球暗色区域（月海）
+    const seaRegions = [
+      { x: 0.3, y: 0.35, radius: 0.15, opacity: 0.4 },
+      { x: 0.6, y: 0.5, radius: 0.12, opacity: 0.35 },
+      { x: 0.45, y: 0.65, radius: 0.1, opacity: 0.3 },
+      { x: 0.7, y: 0.3, radius: 0.08, opacity: 0.25 }
+    ]
+
+    seaRegions.forEach(region => {
+      const seaGradient = ctx.createRadialGradient(
+        size * region.x, size * region.y, 0,
+        size * region.x, size * region.y, size * region.radius
+      )
+      seaGradient.addColorStop(0, `rgba(80, 80, 80, ${region.opacity})`)
+      seaGradient.addColorStop(1, 'rgba(80, 80, 80, 0)')
+
+      ctx.fillStyle = seaGradient
+      ctx.fillRect(0, 0, size, size)
+    })
+
+    // 3. 添加陨石坑（大中小三种尺寸）
+    ctx.globalCompositeOperation = 'multiply'
+
+    // 大陨石坑
+    for (let i = 0; i < 20; i++) {
+      const x = Math.random() * size
+      const y = Math.random() * size
+      const radius = Math.random() * 15 + 10
+      const opacity = Math.random() * 0.4 + 0.3
+
+      const craterGradient = ctx.createRadialGradient(x, y, 0, x, y, radius)
+      craterGradient.addColorStop(0, `rgba(60, 60, 60, ${opacity})`)
+      craterGradient.addColorStop(0.6, `rgba(100, 100, 100, ${opacity * 0.5})`)
+      craterGradient.addColorStop(1, 'rgba(100, 100, 100, 0)')
+
+      ctx.fillStyle = craterGradient
+      ctx.fillRect(0, 0, size, size)
+    }
+
+    // 中等陨石坑
+    for (let i = 0; i < 50; i++) {
+      const x = Math.random() * size
+      const y = Math.random() * size
+      const radius = Math.random() * 8 + 4
+      const opacity = Math.random() * 0.3 + 0.2
+
+      const craterGradient = ctx.createRadialGradient(x, y, 0, x, y, radius)
+      craterGradient.addColorStop(0, `rgba(70, 70, 70, ${opacity})`)
+      craterGradient.addColorStop(1, 'rgba(70, 70, 70, 0)')
+
+      ctx.fillStyle = craterGradient
+      ctx.fillRect(0, 0, size, size)
+    }
+
+    // 小陨石坑（细节）
+    ctx.globalCompositeOperation = 'source-over'
+    for (let i = 0; i < 150; i++) {
+      const x = Math.random() * size
+      const y = Math.random() * size
+      const radius = Math.random() * 3 + 1
+
+      ctx.fillStyle = `rgba(80, 80, 80, ${Math.random() * 0.2 + 0.1})`
+      ctx.beginPath()
+      ctx.arc(x, y, radius, 0, Math.PI * 2)
+      ctx.fill()
+    }
+
+    // 创建纹理
+    const texture = new THREE.CanvasTexture(canvas)
+    texture.needsUpdate = true
+    return texture
+  }
+
+  /**
+   * 创建月球（静态贴图版，性能优化）
    */
   function createMoon() {
     const config = CELESTIAL_BODIES.moon
     if (!config.enabled) return
 
-    // 月球几何体 - 降低细分度以提升性能
+    // 月球几何体
     const geometry = new THREE.SphereGeometry(config.radius, 32, 32)
-    const material = new THREE.MeshPhongMaterial({
-      color: config.color,
-      emissive: config.emissive || 0x000000,
-      specular: config.specular || 0x222222,
-      shininess: config.shininess || 5
+    const moonTexture = createMoonTexture(512)
+
+    // 使用 MeshBasicMaterial 减少光照计算
+    const material = new THREE.MeshBasicMaterial({
+      map: moonTexture
     })
     const moon = new THREE.Mesh(geometry, material)
 
@@ -52,11 +146,86 @@ export function useCelestialSystem(scene, earthGroup, sunLight) {
       angle: 0
     }
 
-    console.log('月球已创建')
+    console.log('月球已创建（静态贴图优化版）')
   }
 
   /**
-   * 创建太阳（改进版，更真实的视觉效果）
+   * 生成太阳纹理（程序化Canvas贴图）
+   */
+  function createSunTexture(size = 512) {
+    const canvas = document.createElement('canvas')
+    canvas.width = size
+    canvas.height = size
+    const ctx = canvas.getContext('2d')
+
+    // 创建径向渐变（太阳表面）
+    const gradient = ctx.createRadialGradient(
+      size / 2, size / 2, 0,
+      size / 2, size / 2, size / 2
+    )
+
+    // 太阳核心到边缘的颜色渐变
+    gradient.addColorStop(0, '#ffffff')    // 中心：白色
+    gradient.addColorStop(0.3, '#ffee44')  // 内层：亮黄色
+    gradient.addColorStop(0.6, '#ffaa00')  // 中层：橙黄色
+    gradient.addColorStop(0.85, '#ff8800') // 外层：橙色
+    gradient.addColorStop(1, '#ff6600')    // 边缘：深橙色
+
+    ctx.fillStyle = gradient
+    ctx.fillRect(0, 0, size, size)
+
+    // 添加太阳黑子和纹理细节（随机噪点）
+    ctx.globalCompositeOperation = 'multiply'
+    for (let i = 0; i < 80; i++) {
+      const x = Math.random() * size
+      const y = Math.random() * size
+      const radius = Math.random() * 8 + 2
+      const opacity = Math.random() * 0.3 + 0.1
+
+      const spotGradient = ctx.createRadialGradient(x, y, 0, x, y, radius)
+      spotGradient.addColorStop(0, `rgba(80, 40, 0, ${opacity})`)
+      spotGradient.addColorStop(1, 'rgba(80, 40, 0, 0)')
+
+      ctx.fillStyle = spotGradient
+      ctx.fillRect(0, 0, size, size)
+    }
+
+    // 创建纹理
+    const texture = new THREE.CanvasTexture(canvas)
+    texture.needsUpdate = true
+    return texture
+  }
+
+  /**
+   * 生成光晕纹理（透明渐变圆形）
+   */
+  function createGlowTexture(size = 256) {
+    const canvas = document.createElement('canvas')
+    canvas.width = size
+    canvas.height = size
+    const ctx = canvas.getContext('2d')
+
+    // 创建径向渐变（中心亮，边缘透明）
+    const gradient = ctx.createRadialGradient(
+      size / 2, size / 2, 0,
+      size / 2, size / 2, size / 2
+    )
+
+    gradient.addColorStop(0, 'rgba(255, 220, 100, 0.8)')
+    gradient.addColorStop(0.4, 'rgba(255, 180, 80, 0.4)')
+    gradient.addColorStop(0.7, 'rgba(255, 140, 60, 0.15)')
+    gradient.addColorStop(1, 'rgba(255, 100, 40, 0)')
+
+    ctx.fillStyle = gradient
+    ctx.fillRect(0, 0, size, size)
+
+    const texture = new THREE.CanvasTexture(canvas)
+    texture.needsUpdate = true
+    return texture
+  }
+
+  /**
+   * 创建太阳（静态贴图版，性能优化）
    */
   function createSun() {
     const config = CELESTIAL_BODIES.sun
@@ -64,83 +233,34 @@ export function useCelestialSystem(scene, earthGroup, sunLight) {
 
     const sunGroup = new THREE.Group()
 
-    // 1. 太阳核心球体（主体） - 降低细分度
+    // 1. 太阳核心球体（使用程序化纹理）
     const coreGeometry = new THREE.SphereGeometry(config.radius, 32, 32)
+    const sunTexture = createSunTexture(512)
+
     const coreMaterial = new THREE.MeshBasicMaterial({
-      color: config.color,
-      emissive: config.color,
-      emissiveIntensity: 1.0
+      map: sunTexture,
+      emissive: new THREE.Color(0xffaa00),
+      emissiveIntensity: 0.8
     })
     const sunCore = new THREE.Mesh(coreGeometry, coreMaterial)
     sunGroup.add(sunCore)
 
-    // 2. 内层光晕（强光） - 降低细分度
-    const innerGlowGeometry = new THREE.SphereGeometry(config.radius * 1.2, 24, 24)
-    const innerGlowMaterial = new THREE.MeshBasicMaterial({
-      color: 0xffff00,
-      transparent: true,
-      opacity: 0.5,
-      side: THREE.BackSide, // 从内部发光
-      blending: THREE.AdditiveBlending
-    })
-    const innerGlow = new THREE.Mesh(innerGlowGeometry, innerGlowMaterial)
-    sunGroup.add(innerGlow)
-
-    // 3. 中层光晕（日冕效果） - 降低细分度
-    const midGlowGeometry = new THREE.SphereGeometry(config.radius * 1.5, 24, 24)
-    const midGlowMaterial = new THREE.MeshBasicMaterial({
-      color: 0xffdd88,
-      transparent: true,
-      opacity: 0.3,
-      side: THREE.BackSide,
-      blending: THREE.AdditiveBlending
-    })
-    const midGlow = new THREE.Mesh(midGlowGeometry, midGlowMaterial)
-    sunGroup.add(midGlow)
-
-    // 4. 外层光晕（柔和扩散） - 降低细分度
-    const outerGlowGeometry = new THREE.SphereGeometry(config.radius * 2.0, 24, 24)
-    const outerGlowMaterial = new THREE.MeshBasicMaterial({
-      color: 0xffaa44,
-      transparent: true,
-      opacity: 0.15,
-      side: THREE.BackSide,
-      blending: THREE.AdditiveBlending
-    })
-    const outerGlow = new THREE.Mesh(outerGlowGeometry, outerGlowMaterial)
-    sunGroup.add(outerGlow)
-
-    // 5. 径向光晕（使用自定义着色器） - 降低细分度
-    const coronaGeometry = new THREE.SphereGeometry(config.radius * 2.5, 24, 24)
-    const coronaMaterial = new THREE.ShaderMaterial({
-      uniforms: {
-        glowColor: { value: new THREE.Color(0xffbb55) },
-        viewVector: { value: new THREE.Vector3() }
-      },
-      vertexShader: `
-        uniform vec3 viewVector;
-        varying float intensity;
-        void main() {
-          vec3 vNormal = normalize(normalMatrix * normal);
-          vec3 vNormel = normalize(normalMatrix * viewVector);
-          intensity = pow(0.7 - dot(vNormal, vNormel), 3.0);
-          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-        }
-      `,
-      fragmentShader: `
-        uniform vec3 glowColor;
-        varying float intensity;
-        void main() {
-          vec3 glow = glowColor * intensity;
-          gl_FragColor = vec4(glow, intensity * 0.3);
-        }
-      `,
-      transparent: true,
-      blending: THREE.AdditiveBlending,
-      side: THREE.FrontSide
-    })
-    const corona = new THREE.Mesh(coronaGeometry, coronaMaterial)
-    sunGroup.add(corona)
+    // 2. 光晕层（单层透明贴图，性能优化）
+    let corona = null
+    if (CONFIG.earth.celestial?.sun?.enableCorona !== false) {
+      const glowTexture = createGlowTexture(256)
+      const glowGeometry = new THREE.SphereGeometry(config.radius * 1.8, 24, 24)
+      const glowMaterial = new THREE.MeshBasicMaterial({
+        map: glowTexture,
+        transparent: true,
+        opacity: 0.6,
+        blending: THREE.AdditiveBlending,
+        side: THREE.BackSide,
+        depthWrite: false
+      })
+      corona = new THREE.Mesh(glowGeometry, glowMaterial)
+      sunGroup.add(corona)
+    }
 
     // 添加到场景
     celestialGroup.add(sunGroup)
@@ -152,7 +272,7 @@ export function useCelestialSystem(scene, earthGroup, sunLight) {
       config: config
     }
 
-    console.log('太阳已创建（增强视觉效果）')
+    console.log('太阳已创建（静态贴图优化版）')
   }
 
   /**
@@ -389,13 +509,19 @@ export function useCelestialSystem(scene, earthGroup, sunLight) {
     // 累计时间（加速）
     elapsedTime += deltaTime * timeScale
 
-    // 更新月球
+    // 更新月球（优化版，添加潮汐锁定）
     if (bodies.moon) {
       const moon = bodies.moon
       const period = moon.config.orbitPeriod * 24 * 3600 // 转换为秒
       moon.angle = (elapsedTime / period) * Math.PI * 2
+
+      // 更新轨道位置
       moon.mesh.position.x = Math.cos(moon.angle) * moon.config.orbitRadius
       moon.mesh.position.z = Math.sin(moon.angle) * moon.config.orbitRadius
+
+      // 潮汐锁定：自转周期 = 公转周期，月球始终以同一面对着地球
+      // 自转角度需要抵消公转带来的旋转，使月球正面始终朝向地球
+      moon.mesh.rotation.y = -moon.angle
     }
 
     // 更新太阳位置（在光源方向上，但距离固定为可视距离）
@@ -405,17 +531,21 @@ export function useCelestialSystem(scene, earthGroup, sunLight) {
       _tempVector1.copy(sunLight.position).normalize().multiplyScalar(sunVisualDistance)
       bodies.sun.mesh.position.copy(_tempVector1)
 
-      // 更新日冕着色器的视图向量（边缘光效果）
-      if (bodies.sun.corona && CONFIG.earth.celestial?.sun?.enableCorona !== false) {
-        // 重用 _tempVector2
-        _tempVector2.subVectors(scene.children[0].position, bodies.sun.mesh.position).normalize()
-        bodies.sun.corona.material.uniforms.viewVector.value.copy(_tempVector2)
+      // 添加太阳核心的微妙脉动效果
+      if (bodies.sun.core && CONFIG.earth.celestial?.sun?.enablePulsate !== false) {
+        const pulsate = 1.0 + Math.sin(elapsedTime * 0.5) * 0.02 // 轻微脉动（2%）
+        bodies.sun.core.scale.setScalar(pulsate)
       }
 
-      // 可选：添加太阳核心的微妙脉动效果
-      if (bodies.sun.core && CONFIG.earth.celestial?.sun?.enablePulsate !== false) {
-        const pulsate = 1.0 + Math.sin(elapsedTime * 0.5) * 0.02 // 轻微脉动
-        bodies.sun.core.scale.setScalar(pulsate)
+      // 缓慢旋转太阳（模拟表面活动）
+      if (bodies.sun.core) {
+        bodies.sun.core.rotation.y += deltaTime * 0.05 // 缓慢自转
+      }
+
+      // 光晕也轻微脉动（营造动态效果）
+      if (bodies.sun.corona && CONFIG.earth.celestial?.sun?.enableCorona !== false) {
+        const coronaPulsate = 1.0 + Math.sin(elapsedTime * 0.3) * 0.03 // 稍慢的脉动
+        bodies.sun.corona.scale.setScalar(coronaPulsate)
       }
     }
 

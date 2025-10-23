@@ -44,7 +44,7 @@ export const CONFIG = {
       enableZoom: false,         // 是否允许滚轮缩放
       distance: 3.0,            // 相机距离（1.5 - 5.0）
       autoRotate: true,        // 是否自动旋转观察视角
-      autoRotateSpeed: 0.1      // 自动旋转速度（-10.0 到 10.0，负值为反向）
+      autoRotateSpeed: 0.1     // 自动旋转速度（-10.0 到 10.0，负值为反向）
     },
 
     // 天体系统配置

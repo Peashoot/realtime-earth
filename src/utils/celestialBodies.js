@@ -37,8 +37,8 @@ export const CELESTIAL_BODIES = {
   sun: {
     name: '太阳',
     type: 'star',
-    radius: 0.6,                     // 艺术化大小（在12单位距离上的合理视觉大小）
-    visualDistance: 12,              // 太阳的可视距离（与地球的距离）
+    radius: 1.2,                     // 增大尺寸以在远距离可见
+    visualDistance: 50,              // 太阳的可视距离（远离行星轨道）
     color: 0xffdd00,                 // 太阳黄色
     emissive: 0xffaa00,              // 强烈自发光
     glowColor: 0xffff00,             // 光晕颜色

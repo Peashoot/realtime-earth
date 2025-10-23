@@ -55,6 +55,6 @@ html, body {
 /* 降级方案 */
 @supports not (backdrop-filter: blur(20px)) {
   .panel-blur {
-    background-color: rgba(15, 23, 42, 0.85) !important;
+    background-color: rgba(15, 23, 42, 0.15) !important;
   }
 }
