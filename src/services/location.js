@@ -55,7 +55,7 @@ export async function getClientIP() {
  */
 export async function getLocationByIP(ip) {
   try {
-    const url = `https://ip-api.peashootzzz.workers.dev/?ip=${ip}`
+    const url = `https://earth.debugw.site/ip-api/json/${ip}?lang=zh-CN`
     console.log('请求 ip-api:', url)
 
     const response = await fetch(url)
