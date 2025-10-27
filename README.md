@@ -1,7 +1,7 @@
 # 实时地球动态壁纸 - 使用说明
 
 > Vue 3 + Three.js + Wallpaper Engine
-> 最后更新时间：2025年10月
+> 最后更新时间：2025年10月27日
 
 ---
 
@@ -249,7 +249,7 @@ weather: {
 - ✅ **自动IP定位**：
   - 主方法：myip.ipip.net
   - 备用方法：ipconfig.me
-- ✅ **IP地理位置解析**：ip-api（通过 Cloudflare Workers 代理，获取经纬度）
+- ✅ **IP地理位置解析**：ip-api（通过云服务器转发，获取经纬度）
 - ✅ **中文城市名称**：和风天气 GeoAPI（经纬度→中文地名）
 - ✅ **和风天气API**：实时天气数据
   - 温度、天气描述、天气图标
@@ -407,12 +407,14 @@ realtime-earth/
 
 | 技术 | 版本 | 用途 |
 |------|------|------|
-| Vue 3 | 3.5.13 | 响应式UI框架 |
-| Three.js | ^0.171.0 | 3D渲染引擎 |
-| Vite | ^6.0.1 | 构建工具 |
-| Day.js | ^1.11.13 | 日期时间处理 |
+| Vue 3 | 3.5.22 | 响应式UI框架 |
+| Three.js | ^0.180.0 | 3D渲染引擎 |
+| Vite | ^5.4.20 | 构建工具 |
+| Day.js | ^1.11.18 | 日期时间处理 |
+| SunCalc | ^1.9.0 | 太阳位置计算 |
+| CryptoJS | ^4.2.0 | API签名加密 |
 | QWeather API | v7 | 天气数据 |
-| Tencent Location | v1 | IP定位 |
+| IP-API | - | IP定位（通过云服务器转发） |
 
 ---
 
@@ -681,7 +683,7 @@ if (currentTime - lastFpsCheck >= 1000) {
 ```
 1. 获取IP (myip.ipip.net 或 ipconfig.me)
    ↓
-2. IP → 地理坐标 (ip-api，通过 Cloudflare Workers 代理)
+2. IP → 地理坐标 (ip-api，通过云服务器转发)
    ↓
 3. 坐标 → 中文城市名称 (和风天气 GeoAPI)
    ↓
@@ -690,7 +692,7 @@ if (currentTime - lastFpsCheck >= 1000) {
 
 **优势**：
 - 获取准确的中文城市名称
-- ip-api 通过 Cloudflare Workers 代理，稳定性高
+- ip-api 通过云服务器转发，稳定性高
 - 统一使用和风天气API生态
 - 自动降级：GeoAPI失败时使用英文名称
 
@@ -823,7 +825,7 @@ earth: {
 
 ### 1. API配置
 - **和风天气API**：需要注册获取免费API Key
-- **IP定位服务**：使用 ip-api（通过 Cloudflare Workers 代理），无需注册，稳定性高
+- **IP定位服务**：使用 ip-api（通过云服务器转发），无需注册，稳定性高
 
 ### 2. 坐标系统
 - 经度偏移量可能需要根据实际情况调整
@@ -844,6 +846,8 @@ earth: {
 | Vue 3 | MIT | https://vuejs.org/ |
 | Three.js | MIT | https://threejs.org/ |
 | Day.js | MIT | https://day.js.org/ |
+| SunCalc | MIT | https://github.com/mourner/suncalc |
+| CryptoJS | MIT | https://github.com/brix/crypto-js |
 | 地球纹理 | 公共领域 | NASA/Solar System Scope |
 | JetBrains Mono | OFL | https://jetbrains.com/mono |
 | QWeather API | 商业/免费 | https://www.qweather.com/ |
@@ -883,9 +887,11 @@ earth: {
 - **Vue.js** - 渐进式JavaScript框架
 - **Three.js** - JavaScript 3D库
 - **Vite** - 下一代前端工具链
+- **SunCalc** - 太阳/月球位置计算库
+- **CryptoJS** - JavaScript加密库
 - **NASA** - 地球纹理资源
 - **和风天气** - 天气数据服务
-- **ip-api** - IP定位服务（通过 Cloudflare Workers 代理）
+- **ip-api** - IP定位服务（通过云服务器转发）
 
 ---
 
@@ -923,7 +929,7 @@ earth: {
   - 太阳光源距离同步调整至 50 单位
 - ✅ **IP 定位服务切换**：
   - 从 ipinfo.io 切换回 ip-api
-  - 使用 Cloudflare Workers 代理提升稳定性
+  - 使用云服务器转发提升稳定性
 - ✅ **配置系统更新**：
   - 更新默认 Bloom 参数以匹配优化
   - 天体系统配置支持单独控制每个天体
