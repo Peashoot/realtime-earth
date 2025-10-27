@@ -1,5 +1,6 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 import { qweatherService } from '../services/qweather.js'
+import { getClientIP } from '../services/location.js'
 import { CONFIG } from '../utils/config.js'
 
 export function useWeather() {
@@ -10,6 +11,8 @@ export function useWeather() {
   const error = ref(null)
 
   let updateTimer = null
+  let ipCheckTimer = null
+  let lastIP = null
 
   // 获取天气数据
   const fetchWeather = async () => {
@@ -67,23 +70,70 @@ export function useWeather() {
     }
   }
 
+  // 检查IP是否变化
+  const checkIPChange = async () => {
+    try {
+      console.log('检查IP是否变化...')
+      const currentIP = await getClientIP()
+
+      if (!lastIP) {
+        // 第一次获取IP
+        lastIP = currentIP
+        console.log('首次记录IP:', lastIP)
+        return
+      }
+
+      if (currentIP !== lastIP) {
+        console.log(`IP已变化: ${lastIP} → ${currentIP}`)
+        lastIP = currentIP
+
+        // 清除位置缓存
+        qweatherService.clearLocationCache()
+
+        // 重新获取天气
+        console.log('IP变化，重新获取天气数据')
+        await fetchWeather()
+      } else {
+        console.log('IP未变化，跳过更新')
+      }
+    } catch (err) {
+      console.error('检查IP失败:', err)
+      // IP检查失败不影响现有数据，静默失败
+    }
+  }
+
   // 刷新天气
   const refetchWeather = () => {
     fetchWeather()
   }
 
-  onMounted(() => {
+  onMounted(async () => {
+    // 首次获取IP并记录
+    try {
+      lastIP = await getClientIP()
+      console.log('初始IP:', lastIP)
+    } catch (err) {
+      console.error('获取初始IP失败:', err)
+    }
+
     // 立即获取一次天气
     fetchWeather()
 
-    // 设置定时更新（每30分钟）
+    // 设置定时更新天气（每30分钟）
     updateTimer = setInterval(fetchWeather, CONFIG.weather.updateInterval)
+
+    // 设置定时检查IP（每15分钟）
+    ipCheckTimer = setInterval(checkIPChange, 15 * 60 * 1000)
   })
 
   onUnmounted(() => {
     if (updateTimer) {
       clearInterval(updateTimer)
       updateTimer = null
+    }
+    if (ipCheckTimer) {
+      clearInterval(ipCheckTimer)
+      ipCheckTimer = null
     }
   })
 

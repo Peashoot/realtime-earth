@@ -40,8 +40,8 @@ export const CONFIG = {
 
     // 相机控制配置
     camera: {
-      enableRotate: false,      // 是否允许鼠标拖动旋转
-      enableZoom: false,         // 是否允许滚轮缩放
+      enableRotate: true,      // 是否允许鼠标拖动旋转
+      enableZoom: true,         // 是否允许滚轮缩放
       distance: 3.0,            // 相机距离（1.5 - 5.0）
       autoRotate: true,        // 是否自动旋转观察视角
       autoRotateSpeed: 0.1     // 自动旋转速度（-10.0 到 10.0，负值为反向）
