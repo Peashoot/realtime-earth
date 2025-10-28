@@ -1,5 +1,14 @@
 // 配置文件
 export const CONFIG = {
+  // UI配置
+  ui: {
+    // 信息面板配置
+    panel: {
+      position: 'top-right', // 面板位置：'top-left' | 'top-right' | 'bottom-left' | 'bottom-right' | 'center'
+      showLunar: true,        // 是否显示农历
+    }
+  },
+
   // IP定位配置
   location: {
     enableIPLocation: true, // 是否启用IP定位

@@ -2,6 +2,7 @@ import { ref, onMounted, onUnmounted } from 'vue'
 import dayjs from 'dayjs'
 import 'dayjs/locale/zh-cn'
 import weekday from 'dayjs/plugin/weekday'
+import { Lunar } from 'lunar-javascript'
 
 // 扩展 dayjs 插件
 dayjs.extend(weekday)
@@ -12,7 +13,7 @@ export function useTime() {
   const currentWeekday = ref('')
   const currentTime = ref('')
   const timezone = ref('北京时间 (UTC+8)')
-  const lunarDate = ref('') // 农历日期，后续集成
+  const lunarDate = ref('')
 
   let timer = null
 
@@ -29,8 +30,17 @@ export function useTime() {
     // 格式化时间：HH:mm:ss
     currentTime.value = now.format('HH:mm:ss')
 
-    // TODO: 集成农历计算
-    // lunarDate.value = toLunar(now)
+    // 计算农历日期
+    try {
+      const lunar = Lunar.fromDate(now.toDate())
+      // 获取农历月日，例如：九月初八
+      const lunarMonth = lunar.getMonthInChinese()  // 返回"九"
+      const lunarDay = lunar.getDayInChinese()      // 返回"初八"
+      lunarDate.value = `${lunarMonth}月${lunarDay}`
+    } catch (error) {
+      console.warn('农历计算失败:', error)
+      lunarDate.value = ''
+    }
   }
 
   onMounted(() => {
